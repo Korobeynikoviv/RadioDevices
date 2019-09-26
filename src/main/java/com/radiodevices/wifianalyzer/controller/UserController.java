@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 @RestController
 public class UserController {
     private UserService userService;
-    private Logger logger = Logger.getLogger(DeviceController.class.getName());
+    private Logger logger = Logger.getLogger(UserController.class.getName());
 
     @Autowired
     public UserController(UserService userService) {
