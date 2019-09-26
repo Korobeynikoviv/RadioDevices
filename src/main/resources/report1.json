@@ -1,0 +1,44 @@
+{
+  "user" : {
+      "id" : 1001,
+      "email" : "creativer@gmail.com",
+      "name" : "Dolgushin",
+      "hash" : "720A423F32882C6C1306D9A9B52D881C"
+  },
+  "sourceDevice" : {
+      "model" : "OnePlus",
+      "imei"  : "353081080078473"
+  },
+  "radioPoints" : [
+      {
+        "model" : "LinkSys",
+        "version" : "1.2.1",
+        "mac" : "5C:4D:11:34:6A:95",
+        "ipAddress" : "192.168.1.2",
+        "ssid" : "Baranyuk-online",
+        "bssid" : "3A:11:27:88:40:22",
+        "rssi" : "-24",
+        "password" : "e7xjH8LVZX"
+      },
+      {
+        "model" : "TpLink",
+        "version" : "3.1b",
+        "mac" : "5C:4D:11:34:6A:97",
+        "ipAddress" : "192.168.2.20",
+        "ssid" : "HotWheels",
+        "bssid" : "15:21:C5:01:A0:F2",
+        "rssi" : "-36",
+        "password" : "SN2f4k6MKA"
+      },
+      {
+        "model" : "Dlink",
+        "version" : "A701U",
+        "mac" : "5C:4D:11:34:6A:99",
+        "ipAddress" : "192.168.3.112",
+        "ssid" : "PornHub4Staff",
+        "bssid" : "D5:8E:10:FE:28:05",
+        "rssi" : "-71",
+        "password" : "AfYjxRL3x6rx"
+      }
+    ]
+}
