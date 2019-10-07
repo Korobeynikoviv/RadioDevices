@@ -3,6 +3,7 @@ package com.radiodevices.wifianalyzer.controller;
 import com.radiodevices.wifianalyzer.enitity.User;
 import com.radiodevices.wifianalyzer.service.AuthorizationService;
 import com.radiodevices.wifianalyzer.service.UserService;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +65,11 @@ public class UserController {
     @GetMapping("/getReports")
     public ResponseEntity getReports(@RequestParam(required = true) String sessionId) {
         logger.log(Level.INFO, ".getReports# sessionId: " + sessionId);
+
+        if (Strings.isBlank(sessionId)) {
+            return new ResponseEntity<String>("Bad request: sessionId is null", HttpStatus.BAD_REQUEST);
+        }
+
         if (authorizationService.isAlive(sessionId)) {
             return new ResponseEntity<>("Session Alive", HttpStatus.OK);
         } else {
