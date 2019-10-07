@@ -6,6 +6,7 @@ import com.radiodevices.wifianalyzer.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -57,6 +58,16 @@ public class UserController {
             return ResponseEntity.ok(authorizationService.login(email, hash));
         } else {
             return ResponseEntity.ok("Не верный пароль!");
+        }
+    }
+
+    @GetMapping("/getReports")
+    public ResponseEntity getReports(@RequestParam(required = true) String sessionId) {
+        logger.log(Level.INFO, ".getReports# sessionId: " + sessionId);
+        if (authorizationService.isAlive(sessionId)) {
+            return new ResponseEntity<>("Session Alive", HttpStatus.OK);
+        } else {
+            return new ResponseEntity<String>("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
     }
 }
