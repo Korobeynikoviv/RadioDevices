@@ -1,20 +1,27 @@
 package com.radiodevices.wifianalyzer.enitity;
 
-import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Table;
 
 /*
 * Радиоустройство
 * */
+@javax.persistence.Entity
+@Table(name = "devices")
 public class Device extends Entity {
 
+    @Column
     private String model;
 
+    @Column
     private String version;
 
+    @Column
     private String mac;
 
+    @Column
     private String ipAddress;
-
+/*
     public Device(String model, String version, String mac, String ipAddress) {
         super();
         this.model = model;
@@ -22,7 +29,7 @@ public class Device extends Entity {
         this.mac = mac;
         this.ipAddress = ipAddress;
     }
-
+*/
     /*
     * Модель устройства
     * */
