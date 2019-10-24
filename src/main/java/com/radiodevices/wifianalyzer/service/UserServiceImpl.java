@@ -5,6 +5,10 @@ import com.radiodevices.wifianalyzer.enitity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +32,7 @@ public class UserServiceImpl implements UserService {
             user = new User();
             user.setEmail(email);
             user.setName(name);
-            user.setHash(hash);
+            user.setHash(getSha256HashHex(hash));
             userDao.save(user);
             logger.log(Level.INFO, "Создали пользователя " + user.toString());
         }
@@ -60,5 +64,32 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUserByEMail(String email) {
         deleteUser(getUserByEmail(email));
+    }
+
+    /** Convert text to hash-number using SHA-256
+     * @param text text to convert
+     * @return sha-256 hash as BigInteger
+     */
+    private static BigInteger getSha256Hash(String text) {
+        try {
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+            md.update( text.getBytes( StandardCharsets.UTF_8 ) );
+            byte[] digest = md.digest();
+
+            return new BigInteger( 1, digest);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /** Convert text to hex-representation (string) of hash using SHA-256
+     * @param text text to convert
+     * @return sha-256 hash as hex string
+     */
+    private String getSha256HashHex(String text) {
+        String response = String.format("%064x", getSha256Hash(text));
+        logger.log(Level.INFO, "Sha256: " + text + " -> " + response);
+        return response;
     }
 }

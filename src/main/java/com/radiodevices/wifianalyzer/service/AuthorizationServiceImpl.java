@@ -1,14 +1,24 @@
 package com.radiodevices.wifianalyzer.service;
 
 import com.radiodevices.wifianalyzer.dao.AuthorizeDao;
+import com.radiodevices.wifianalyzer.dao.UserDao;
 import com.radiodevices.wifianalyzer.enitity.Session;
+import com.radiodevices.wifianalyzer.enitity.User;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,47 +26,72 @@ import java.util.logging.Logger;
 public class AuthorizationServiceImpl implements AuthorizationService {
 
     private AuthorizeDao authorizeDao;
+    private UserDao userDao;
     private Logger logger = Logger.getLogger(AuthorizationServiceImpl.class.getName());
 
+    private static Map<User, Session> autohorizedUsers = new ConcurrentHashMap<>();
+
     @Autowired
-    public AuthorizationServiceImpl(AuthorizeDao authorizeDao) {
+    public AuthorizationServiceImpl(AuthorizeDao authorizeDao, UserDao userDao) {
         this.authorizeDao = authorizeDao;
+        this.userDao = userDao;
     }
 
     @Override
     public String login(String email, String hash) {
+        if (email == null || hash == null) {
+            logger.log(Level.INFO, ".login# ОШИБКА! email: " + email + "; hash: " + hash);
+            return null;
+        }
+
         // если сессии нет, создаем
         logger.log(Level.INFO, ".login# email: " + email + "; hash: " + hash);
+        User user = userDao.findAll().stream()
+                .filter(user1 -> user1.getEmail().equals(email))
+                .findFirst()
+                .orElse(null);
 
-        String loginId = getMd5(email + hash);
-        Session session = getSessionByLogin(loginId);
+        if (user == null) {
+            logger.log(Level.INFO, ".login# пользователь "+ email + " не найден!");
+            return null;
+        }
+
+        String userPassHash = user.getHash();
+
+        if (userPassHash == null ) {
+            logger.log(Level.INFO, "User not found or password is null");
+            return null;
+        }
+
+        if (!userPassHash.equals(hash)) {
+            logger.log(Level.INFO, "Wrong password");
+            return null;
+        }
+
+        Session session = getSession(user);
 
         if (Objects.isNull(session)){
             // сессии нет, создаём
-            String sessionId = getMd5(email + LocalDate.now().toString() + hash);
-            return createSession(loginId, sessionId);
+            session = createSession(email);
+            autohorizedUsers.put(user, session);
+            return session.getSessionId();
         }
 
-        if (isAlive(session)) {
-            // сессия актуальная
-            return session.getSessionId();
-        } else {
-            // сессия протухла, создаём новую
-            dropSession(session);
-            Date current = new Date();
-            String sessionId = getMd5(email + current.getTime() + hash);
-            return createSession(loginId, sessionId);
+        if (!isAlive(session)) {
+            dropSession(email);
+            session = createSession(email);
+            autohorizedUsers.put(user, session);
         }
+        return session.getSessionId();
     }
 
     @Override
     public void logOut(String sessionId) {
         // Удаляем запись по sessionId
         logger.log(Level.INFO, ".logout# sessionId: " + sessionId);
-        Session session = getSession(sessionId);
 
-        if (Objects.isNull(session)){
-            dropSession(session);
+        if (Objects.isNull(sessionId)){
+            dropSession(sessionId);
         }
     }
 
@@ -65,7 +100,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         // если сессия протухла, то вернуть false
         logger.log(Level.INFO, ".isAlive# sessionId: " + sessionId);
         Session session = getSession(sessionId);
-        return isAlive(session);
+        return session != null && isAlive(session);
     }
 
     @Override
@@ -79,34 +114,80 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     }
 
     private Session getSession(String sessionId) {
-        return authorizeDao.findAll().stream().filter(it -> it.getSessionId().equals(sessionId)).findFirst().orElse(null);
+        Collection<User> userKeys = autohorizedUsers.keySet();
+
+        for (User user : userKeys) {
+            Session session = autohorizedUsers.get(user);
+            if (session.getSessionId().equals(sessionId)) {
+                return session;
+            }
+        }
+        return null;
     }
 
-    private Session getSessionByLogin(String loginId) {
-        return authorizeDao.findAll().stream().filter(it -> it.getLogin().equals(loginId)).findFirst().orElse(null);
+    private Session getSession(User user) {
+        Collection<User> userKeys = autohorizedUsers.keySet();
+        for (User key : userKeys) {
+            Session session = autohorizedUsers.get(user);
+            if (key.getId().equals(user.getId())) {
+                return autohorizedUsers.get(key);
+            }
+        }
+        return null;
     }
 
-    private String createSession(String login, String sessionId) {
+    private Session createSession(String login) {
         // создаем запись sessionId
+        String sessionId = getSha256HashHex(login + LocalDateTime.now().toString());
         Session session = new Session();
         session.setLogin(login);
         session.setDate(new Date());
         session.setSessionId(sessionId);
         authorizeDao.save(session);
 
-        return sessionId;
+        return session;
     }
 
-    private void dropSession(Session session) {
+    private void dropSession(String login) {
         // Удаление записи из таблицы
-        if (!Objects.isNull(session)) {
-            authorizeDao.delete(session);
-            logger.log(Level.INFO, ".dropSession# sessionId: " + session.getSessionId() + " deleted!");
+        if (!Objects.isNull(login)) {
+            Collection<User> userKeys = autohorizedUsers.keySet();
+
+            for (User user : userKeys) {
+                Session session = autohorizedUsers.get(user);
+                if (user.getEmail().equals(login)) {
+                    autohorizedUsers.remove(user);
+                }
+            }
+
+            logger.log(Level.INFO, ".dropSession# session for : " + login + " deleted!");
         }
     }
 
-    private String getMd5(String st) {
-        logger.log(Level.INFO, ".getMd5# st: " + st);
-        return DigestUtils.md5Hex(st);
+    /** Convert text to hash-number using SHA-256
+     * @param text text to convert
+     * @return sha-256 hash as BigInteger
+     */
+    private static BigInteger getSha256Hash(String text) {
+        try {
+            MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+            md.update( text.getBytes( StandardCharsets.UTF_8 ) );
+            byte[] digest = md.digest();
+
+            return new BigInteger( 1, digest);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /** Convert text to hex-representation (string) of hash using SHA-256
+     * @param text text to convert
+     * @return sha-256 hash as hex string
+     */
+    private String getSha256HashHex(String text) {
+        String response = String.format("%064x", getSha256Hash(text));
+        logger.log(Level.INFO, "Sha256: " + text + " -> " + response);
+        return response;
     }
 }
