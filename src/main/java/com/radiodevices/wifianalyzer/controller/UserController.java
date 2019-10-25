@@ -101,7 +101,11 @@ public class UserController {
     ) {
         JSONObject reportObject = new JSONObject(report);
         logger.log(Level.INFO, "sessionId: " + session + "; report: " + report);
-        reportService.saveReport("user1", report);
+        User user = authorizationService.getUserBySessionId(session);
+        if (user == null) {
+            return new ResponseEntity<Response>(new Response(counter.incrementAndGet(), "User not found"), HttpStatus.BAD_REQUEST);
+        }
+        reportService.saveReport(user.getEmail(), report);
         return new ResponseEntity<Response>(new Response(counter.incrementAndGet(), "Report saved"), HttpStatus.OK);
     }
 
