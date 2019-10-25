@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,6 +38,7 @@ public class UserController {
     private AuthorizationService authorizationService;
     private Logger logger = Logger.getLogger(UserController.class.getName());
     private final AtomicLong counter = new AtomicLong();
+    private static String ADMIN_ROLE ="admin";
 
     @Autowired
     public UserController(UserService userService,
@@ -120,7 +122,14 @@ public class UserController {
         if (user == null) {
             return new ResponseEntity<String>("Bad request: User not found", HttpStatus.BAD_REQUEST);
         }
-        List<Report> reports = reportService.getReports();
+
+        List<Report> reports;
+        if (user.getRole().equals(ADMIN_ROLE)) {
+            reports = reportService.getReports();
+        } else {
+            reports = reportService.getUserReports(user);
+        }
+
         return new ResponseEntity<>(reports, HttpStatus.OK);
 
     }
