@@ -49,10 +49,11 @@ public class UserController {
 
     @PostMapping("/user/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@RequestParam(required = true) String email,
+    public User create(@RequestParam(required = true) String login,
+                       @RequestParam(required = true) String password,
                        @RequestParam(required = true) String name,
-                       @RequestParam(required = true) String password) {
-        return userService.addUser(email, name, password);
+                       @RequestParam(required = true) String role) {
+        return userService.addUser(login, name, password, role);
     }
 
     @PostMapping("/user/delete")

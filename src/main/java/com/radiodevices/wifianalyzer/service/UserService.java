@@ -6,7 +6,7 @@ public interface UserService {
     /*
     * Добавить пользователя
     * */
-    public User addUser(String email, String name, String hash);
+    public User addUser(String email, String name, String hash, String role);
 
     /*
     * Вернуть пользователя по eMail

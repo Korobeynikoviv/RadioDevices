@@ -2,6 +2,7 @@ package com.radiodevices.wifianalyzer.service;
 
 import com.radiodevices.wifianalyzer.dao.UserDao;
 import com.radiodevices.wifianalyzer.enitity.User;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User addUser(String email, String name, String hash) {
+    public User addUser(String email, String name, String hash, String role) {
         User user = getUserByEmail(email);
 
         if (user == null) {
@@ -33,6 +34,10 @@ public class UserServiceImpl implements UserService {
             user.setEmail(email);
             user.setName(name);
             user.setHash(getSha256HashHex(hash));
+            if (role.equals(Strings.EMPTY)) {
+                role = "user";
+            }
+            user.setRole(role);
             userDao.save(user);
             logger.log(Level.INFO, "Создали пользователя " + user.toString());
         }

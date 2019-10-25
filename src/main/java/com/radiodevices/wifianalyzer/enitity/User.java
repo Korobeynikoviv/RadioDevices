@@ -29,6 +29,9 @@ public class User implements Serializable {
     @Column(columnDefinition = "pass_hash")
     private String hash;
 
+    @Column(columnDefinition = "role")
+    private String role;
+
     public Long getId() {
         return id;
     }
@@ -64,6 +67,14 @@ public class User implements Serializable {
 
     public void setHash(String hash) {
         this.hash = hash;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String toString() {
