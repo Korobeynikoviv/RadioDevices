@@ -7,7 +7,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "start": "webpack-dev-server --open"
+    "start": "webpack-dev-server --open --host 172.30.14.118"
   },
   "dependencies": {
     "react": "^16.0.0",

@@ -119,6 +119,10 @@ public class UserController {
     public ResponseEntity getReports(@RequestParam String sessionId) {
         logger.log(Level.INFO, ".getReports# sessionId: " + sessionId);
 
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        responseHeaders.add("Access-Control-Allow-Origin", "*");
+
         if (Strings.isBlank(sessionId)) {
             return new ResponseEntity<String>("Bad request: sessionId is null", HttpStatus.BAD_REQUEST);
         }
@@ -134,7 +138,7 @@ public class UserController {
             reports = reportService.getUserReports(user);
         }
 
-        return new ResponseEntity<>(reports, HttpStatus.OK);
+        return new ResponseEntity<>(reports, responseHeaders,  HttpStatus.OK);
 
     }
 

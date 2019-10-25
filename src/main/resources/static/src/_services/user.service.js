@@ -25,6 +25,7 @@ function login(login, password) {
                 // to keep user logged in between page refreshes
                 user.authdata = window.btoa(login + ':' + password);
                 localStorage.setItem('user', JSON.stringify(user));
+                localStorage.setItem('sessionId', user.session);
                 return user;
             }
 

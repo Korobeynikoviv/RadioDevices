@@ -1,0 +1,44 @@
+.sorting-block{
+  position: relative;
+  padding-right: 20px !important;
+  cursor: pointer;
+  user-select: none;
+
+  &.is-sortASC{
+    &:before{
+      border-bottom-color: #333;
+    }
+  }
+
+  &.is-sortDESC{
+    &:after{
+      border-top-color: #333;
+    }
+  }
+
+  &:before, &:after{
+    position: absolute;
+    content: '';
+    right: 5px;
+  }
+
+  &:before{
+    top: 50%;
+    margin-top: -5px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 5px 5px 5px;
+    border-color: transparent transparent #eee transparent;
+  }
+
+  &:after{
+    top: 50%;
+    margin-top: 1px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 5px 0 5px;
+    border-color: #eee transparent transparent transparent;
+  }
+}
