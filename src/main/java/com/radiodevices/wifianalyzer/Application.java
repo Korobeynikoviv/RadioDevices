@@ -14,11 +14,6 @@ public class Application {
         SpringApplication.run(Application.class, args);
         ObjectMapper mapper = new ObjectMapper();
         File json = new File(Application.class.getClassLoader().getResource("report1.json").getFile());
-        try {
-            Report report = mapper.readValue(json, Report.class);
-            System.out.println("ok");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("ok");
     }
 }

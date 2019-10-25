@@ -1,58 +1,60 @@
 package com.radiodevices.wifianalyzer.enitity;
 
-import java.util.Date;
-import java.util.List;
+import javax.persistence.Entity;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /*
 * Отчет
 * */
+@Entity
+@Table(name = "reports")
 public class Report {
-    private User user;
-    private Date createDate;
-    private ReportSourceDevice sourceDevice;
-    private List<RadioPoint> radioPoints;
+    @Id
+    @GeneratedValue(generator = "report_generator")
+    @SequenceGenerator(
+            name = "report_generator",
+            sequenceName = "report_sequence",
+            initialValue = 1000
+    )
+    private Long id;
+    @Column(columnDefinition = "email")
+    private String email;
+    @Column(columnDefinition = "date")
+    private LocalDateTime date;
+    @Column(columnDefinition = "report_json")
+    private String reportJson;
 
     /*
     * Пользователь
     * */
-    public User getUser() {
-        return user;
+    public String getUser() {
+        return email;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setUser(String user) {
+        this.email = user;
     }
 
-    /*
-    * Дата создания
-    * */
-    public Date getCreateDate() {
-        return createDate;
+
+    public LocalDateTime getLocalDateTime() {
+        return date;
     }
 
-    public void setCreateDate(Date createDate) {
-        this.createDate = createDate;
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+        this.date = localDateTime;
     }
 
-    /*
-    * Источник отчета
-    * */
-    public ReportSourceDevice getSourceDevice() {
-        return sourceDevice;
+    public String getReportJson() {
+        return reportJson;
     }
 
-    public void setSourceDevice(ReportSourceDevice sourceDevice) {
-        this.sourceDevice = sourceDevice;
+    public void setReportJson(String reportJson) {
+        this.reportJson = reportJson;
     }
 
-    /*
-    * Радиоточки
-    * */
-    public List<RadioPoint> getRadioPoints() {
-        return radioPoints;
+    public Long getId() {
+        return id;
     }
 
-    public void setRadioPoints(List<RadioPoint> radioPoints) {
-        this.radioPoints = radioPoints;
-    }
 }

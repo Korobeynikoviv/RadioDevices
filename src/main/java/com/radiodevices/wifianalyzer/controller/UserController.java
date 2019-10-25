@@ -1,20 +1,30 @@
 package com.radiodevices.wifianalyzer.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.radiodevices.wifianalyzer.enitity.Report;
 import com.radiodevices.wifianalyzer.enitity.User;
 import com.radiodevices.wifianalyzer.service.AuthorizationService;
+import com.radiodevices.wifianalyzer.service.ReportService;
 import com.radiodevices.wifianalyzer.service.UserService;
 import org.apache.logging.log4j.util.Strings;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -23,15 +33,18 @@ import java.util.logging.Logger;
 @RestController
 public class UserController {
     private UserService userService;
+    private ReportService reportService;
     private AuthorizationService authorizationService;
     private Logger logger = Logger.getLogger(UserController.class.getName());
     private final AtomicLong counter = new AtomicLong();
 
     @Autowired
     public UserController(UserService userService,
-                          AuthorizationService authorizationService) {
+                          AuthorizationService authorizationService,
+                          ReportService reportService) {
         this.userService = userService;
         this.authorizationService = authorizationService;
+        this.reportService = reportService;
     }
 
     @PostMapping("/user/create")
@@ -85,6 +98,7 @@ public class UserController {
     ) {
         JSONObject reportObject = new JSONObject(report);
         logger.log(Level.INFO, "sessionId: " + session + "; report: " + report);
+        reportService.saveReport("user1", report);
         return new ResponseEntity<Response>(new Response(counter.incrementAndGet(), "Report saved"), HttpStatus.OK);
     }
 
@@ -95,18 +109,19 @@ public class UserController {
     }
 
     @GetMapping("/getReports")
-    public ResponseEntity getReports(@RequestParam(required = true) String sessionId) {
+    public ResponseEntity getReports(@RequestParam String sessionId) {
         logger.log(Level.INFO, ".getReports# sessionId: " + sessionId);
 
         if (Strings.isBlank(sessionId)) {
             return new ResponseEntity<String>("Bad request: sessionId is null", HttpStatus.BAD_REQUEST);
         }
-
-        if (authorizationService.isAlive(sessionId)) {
-            return new ResponseEntity<>("Session Alive", HttpStatus.OK);
-        } else {
-            return new ResponseEntity<String>("Unauthorized", HttpStatus.UNAUTHORIZED);
+        User user = authorizationService.getUserBySessionId(sessionId);
+        if (user == null) {
+            return new ResponseEntity<String>("Bad request: User not found", HttpStatus.BAD_REQUEST);
         }
+        List<Report> reports = reportService.getReports();
+        return new ResponseEntity<>(reports, HttpStatus.OK);
+
     }
 
     class SessionDto implements Serializable {
@@ -175,158 +190,6 @@ public class UserController {
 
         public String getContent() {
             return content;
-        }
-
-
-    }
-
-    class WifiDetailsDto implements Serializable {
-        private String ssid;
-        private String bssid;
-        private Integer level;
-        private Integer primaryChannel;
-        private Integer primaryFrequency;
-        private String frequencyUnits;
-        private Integer centerChannel;
-        private Integer centerFrequency;
-        private Integer frequencyWidth;
-        private Integer frequencyStart;
-        private Integer frequencyEnd;
-        private Integer distance;
-        private Boolean mc;
-        private String capabilities;
-
-        public String getSsid() {
-            return ssid;
-        }
-
-        public void setSsid(String ssid) {
-            this.ssid = ssid;
-        }
-
-        public String getBssid() {
-            return bssid;
-        }
-
-        public void setBssid(String bssid) {
-            this.bssid = bssid;
-        }
-
-        public Integer getLevel() {
-            return level;
-        }
-
-        public void setLevel(Integer level) {
-            this.level = level;
-        }
-
-        public Integer getPrimaryChannel() {
-            return primaryChannel;
-        }
-
-        public void setPrimaryChannel(Integer primaryChannel) {
-            this.primaryChannel = primaryChannel;
-        }
-
-        public Integer getPrimaryFrequency() {
-            return primaryFrequency;
-        }
-
-        public void setPrimaryFrequency(Integer primaryFrequency) {
-            this.primaryFrequency = primaryFrequency;
-        }
-
-        public String getFrequencyUnits() {
-            return frequencyUnits;
-        }
-
-        public void setFrequencyUnits(String frequencyUnits) {
-            this.frequencyUnits = frequencyUnits;
-        }
-
-        public Integer getCenterChannel() {
-            return centerChannel;
-        }
-
-        public void setCenterChannel(Integer centerChannel) {
-            this.centerChannel = centerChannel;
-        }
-
-        public Integer getCenterFrequency() {
-            return centerFrequency;
-        }
-
-        public void setCenterFrequency(Integer centerFrequency) {
-            this.centerFrequency = centerFrequency;
-        }
-
-        public Integer getFrequencyWidth() {
-            return frequencyWidth;
-        }
-
-        public void setFrequencyWidth(Integer frequencyWidth) {
-            this.frequencyWidth = frequencyWidth;
-        }
-
-        public Integer getFrequencyStart() {
-            return frequencyStart;
-        }
-
-        public void setFrequencyStart(Integer frequencyStart) {
-            this.frequencyStart = frequencyStart;
-        }
-
-        public Integer getFrequencyEnd() {
-            return frequencyEnd;
-        }
-
-        public void setFrequencyEnd(Integer frequencyEnd) {
-            this.frequencyEnd = frequencyEnd;
-        }
-
-        public Integer getDistance() {
-            return distance;
-        }
-
-        public void setDistance(Integer distance) {
-            this.distance = distance;
-        }
-
-        public Boolean getMc() {
-            return mc;
-        }
-
-        public void setMc(Boolean mc) {
-            this.mc = mc;
-        }
-
-        public String getCapabilities() {
-            return capabilities;
-        }
-
-        public void setCapabilities(String capabilities) {
-            this.capabilities = capabilities;
-        }
-    }
-
-    class ReportDto implements Serializable {
-        private List<WifiDetailsDto> wiFiDetails;
-        private LocalDateTime timestamp;
-
-        public List<WifiDetailsDto> getWiFiDetails() {
-            return wiFiDetails;
-        }
-
-        public void setWiFiDetails(List<WifiDetailsDto> wiFiDetails) {
-            this.wiFiDetails = wiFiDetails;
-        }
-
-        public LocalDateTime getTimestamp() {
-            return timestamp;
-        }
-
-        public void setTimestamp(LocalDateTime timestamp) {
-            this.timestamp = timestamp;
         }
     }
 }

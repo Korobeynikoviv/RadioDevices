@@ -113,6 +113,19 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         return (seconds / 60) < ONE_MINUTE;
     }
 
+    @Override
+    public User getUserBySessionId(String sessionId) {
+        Collection<User> userKeys = autohorizedUsers.keySet();
+        for (User key : userKeys) {
+            Session session = autohorizedUsers.get(key);
+            if (session.getSessionId().equals(sessionId)) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+
     private Session getSession(String sessionId) {
         Collection<User> userKeys = autohorizedUsers.keySet();
 
